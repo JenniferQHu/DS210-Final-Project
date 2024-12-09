@@ -1,54 +1,22 @@
-use std::collections::{HashMap};
-use std::error::Error;
-use csv::ReaderBuilder;
+mod graph;
+use graph::{Graph, read_graph_from_csv};
+use rand::Rng;
+use std::collections::HashMap
 
-fn read_graph_from_csv(file_path: &str) -> Result<HashMap<String, Vec<String>>, Box<dyn Error>> {
-    // Initialize a HashMap to store the graph as an adjacency list
-    let mut graph: HashMap<String, Vec<String>> = HashMap::new();
-    
-    // Open the file (data are separated by \t)
-    let mut rdr = ReaderBuilder::new()
-        .delimiter(b'\t')
-        .has_headers(true)
-        .from_path(file_path)?;
-    
-    // Read through the rows in the CSV
-    for result in rdr.records() {
-        match result {
-            Ok(line) => {
-                if line.len() < 2 {
-                    println!("Skipping invalid line: {:?}", line);
-                    continue;
-                }
-                let node: &str = &line[0];
-                let edge: &str = &line[1];
-
-                // Insert the edge into the adjacency list for the node
-                graph.entry(node.to_string())
-                    .or_insert_with(Vec::new)
-                    .push(edge.to_string());
-            },
-            Err(e) => {
-                println!("Error reading record: {}", e);
-                continue;
-            }
-        }
-    }
-    
-    Ok(graph)
-}
-
-fn page_rank(graph: HashMap<String, Vec<String>>, damping_factor: f64, iterations: f64) -> HashMap<String, f64> {
-    let n = graph.len();
-    //initialize each node's pgrank to 1/n
-    let init_page_rank: HashMap<String, f64> = graph.keys().map(|key| (key.clone(), 1.0 / n as f64)).collet();
+fn page_rank(graph: &Graph, steps: usize, iterations: usize) -> HashMap<String, f64> {
+    let mut terminations = HashMap::<String, usize>::new();
     for _ in 0..iterations {
-        let page_rank: HashMap<String, f64> = init_page_rank.clone();
-        for (node, _) in graph {
-            let mut rank = 0.0;
-            
+        for node in graph.outedges.key() {
+            let next_node = graph.random_walk(node, steps);
+            terminations.entry(next_node).or_inset(0) += 1;
         }
     }
+    let walks = iterations * graph.outedges.len() as usize;
+    let mut page_rank: HashMap<String, f64> = HashMap::new();
+    for (node, count) in terminations.iter() {
+        page_rank.insert(node.clone(), count as f64 / walks as f64);
+    }
+    page_rank
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -58,8 +26,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let graph = read_graph_from_csv(file_path)?;
     
     // Print the adjacency list (graph) to check the structure
-    for (node, edges) in &graph {
-        println!("Node {} has edges: {:?}", node, edges);
+    let mut ranked_papers: Vec<(String, f64)> = page_rank.iter().map(|(key, value)| (key.clone(), *v)).collect();
+    ranked_papers.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    let top_count = 5;
+    println!("Top 5 Cited Papers:");
+    for (i, (paper, rank)) in ranked_papers.iter().take(top_count).enumerate() {
+        println!("{}: paper {}, rank {}", i+1, paper, rank);
     }
     Ok(())
 }

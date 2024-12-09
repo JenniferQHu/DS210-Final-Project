@@ -1,49 +1,39 @@
-use std::fs::File;
-use std::io::{BufRead};
+use std::collections::HashMap
 use rand::Rng;
+use csv::ReaderBuilder;
 
-
-pub type Vertex = usize;
-pub type ListOfEdges = Vec<(Vertex,Vertex)>;
-pub type AdjacencyLists = Vec<Vec<Vertex>>;
+pub type Node = String
+pub type AdjacencyLists = HashMap<Node, Vec<Node>>;
 
 #[derive(Debug)]
 pub struct Graph {
-    pub n: usize,
     pub outedges: AdjacencyLists,
 }
 
 impl Graph {
-    pub fn add_directed_edges(&mut self, edges:&ListOfEdges) {
-        for (u,v) in edges {
-            self.outedges[*u].push(*v);
+    pub fn create_directed_graph(edges: Vec<(Node, Node)>) -> Graph {
+        let mut graph = Graph {outedges: HashMap::new()};
+        for (from, to) in edges {
+            graph.outedges.entry(from).or_insert_with(Vec::new).push(to);
         }
+        graph
     }
-    pub fn sort_graph_lists(&mut self) {
-        for l in self.outedges.iter_mut() {
-            l.sort();
-        }
-    }
-    pub fn create_directed(n:usize, edges:&ListOfEdges) -> Graph {
-        let mut g = Graph{n, outedges:vec![vec![];n]};
-        g.add_directed_edges(edges);
-        g.sort_graph_lists();
-        g //return total number of verticies, the adjacency list                                        
-    }
-    
-    pub fn random_walk(&self, current: Vertex, steps: usize) -> Vertex {
-        let mut current_v = current;
+    //if no neighbor, jump to random node in graph, if has neighbor 90% go to a neighboring node, 10% jump to random node in graph
+    pub fn random_walk(&self, current: &Node, steps: usize) -> Node {
+        let mut current_node = current.clone();
+        let mut rng = rand::thread_rng();
         for _ in 0..steps {
-            let mut rng = rand::thread_rng();
-            if self.outedges[current_v].is_empty() { //the vertex has no outgoing edges
-                current_v = rng.gen_range(0..self.n); //jump to a random vertex in the entire graph
+            let neighbors = self.outedges.get(&current_node).unwrap_or(&Vec::new());
+            if neighbors.is_empty() { //the vertex has no outgoing edges
+                let rand_i = rng.gen_range(0..self.len());
+                current_v = self.outedges.keys().nth(rand_i).unwrap().clone(); //jump to a random node in the entire graph
             } else { 
                 let random_number = rng.gen_range(1..=10);
                 if random_number == 1 { // 10% chance for this branch
-                    current_v = rng.gen_range(0..self.n); //jump to a random vertex in the entire graph
+                    current_v = rng.gen_range(0..self.len()); //jump to a random node in the entire graph
                 } else {// 90% chance for this branch
-                    let random_edge = rng.gen_range(0..self.outedges[current_v].len());
-                    current_v = self.outedges[current_v][random_edge];//jump to a random vertex in the list of outgoing edges
+                    let random_edge = rng.gen_range(0..neighbors.len());
+                    current_v = neighbors[random_edge].clone();//jump to a random node in the list of neighbors
                 }
             }
         }
@@ -52,28 +42,33 @@ impl Graph {
     
 }
 
-pub fn read_data(filename: &str) -> Graph {
-    let file = File::open(filename).expect("Could not open file");
-    let mut buf_reader = std::io::BufReader::new(file).lines();
-    // Parse the first line to get `n`
-    let n: usize = buf_reader
-        .next()
-        .unwrap()
-        .unwrap()
-        .parse::<usize>()
-        .unwrap();
-    let mut edges = Vec::new();
-    for line in buf_reader {
-        let line_str = line.expect("Error reading");
-        let vertices: Vec<usize> = line_str
-            .split_whitespace()
-            .map(|x| x.parse::<usize>().expect("Expected a number"))
-            .collect();
-        if vertices.len() == 2 {
-            edges.push((vertices[0], vertices[1]));
+pub fn read_graph_from_csv(filename: &str) -> Result<Graph, Box<dyn std::error:Error>> {
+    let mut graph: Vec<(Node, Node)> = Vec::new();
+    // Open the file (data are separated by \t)
+    let mut rdr = ReaderBuilder::new()
+        .delimiter(b'\t')
+        .has_headers(true)
+        .from_path(file_path)?;
+    
+    // Read through the rows in the CSV
+    for result in rdr.records() {
+        match result {
+            Ok(line) => {
+                if line.len() < 2 {
+                    println!("Skipping invalid line: {:?}", line);
+                    continue;
+                }
+                let from: &str = &line[0];
+                let to: &str = &line[1];
+                // Insert the edge into the adjacency list for the node
+                graph.push((from.to_string(), to.to_string()));
+            },
+            Err(e) => {
+                println!("Error reading record: {}", e);
+                continue;
+            }
         }
     }
-    
-    // Create the graph and return it
-    let graph = Graph::create_directed(n, &edges);
-    return graph;
+    let graph_struct = Graph::create_directed_graph(graph);
+    Ok(graph_struct)
+}
