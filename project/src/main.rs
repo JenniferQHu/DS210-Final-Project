@@ -38,6 +38,19 @@ fn read_graph_from_csv(file_path: &str) -> Result<HashMap<String, Vec<String>>, 
     Ok(graph)
 }
 
+fn page_rank(graph: HashMap<String, Vec<String>>, damping_factor: f64, iterations: f64) -> HashMap<String, f64> {
+    let n = graph.len();
+    //initialize each node's pgrank to 1/n
+    let init_page_rank: HashMap<String, f64> = graph.keys().map(|key| (key.clone(), 1.0 / n as f64)).collet();
+    for _ in 0..iterations {
+        let page_rank: HashMap<String, f64> = init_page_rank.clone();
+        for (node, _) in graph {
+            let mut rank = 0.0;
+            
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let file_path = "citations.csv"; // Path to your CSV file
     
