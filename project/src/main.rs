@@ -1,5 +1,5 @@
 mod graph;
-use graph::{Graph, read_graph_from_csv};
+use graph::Graph;
 use rand::Rng;
 use std::error::Error;
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let file_path = "citations.csv"; // Path to your CSV file
     
     // Read the graph from the CSV file
-    let graph = read_graph_from_csv(file_path)?;
+    let graph = Graph::read_graph_from_csv(file_path)?;
     
     let computed_page_rank = page_rank(&graph, 80, 80);
     // Print the adjacency list (graph) to check the structure

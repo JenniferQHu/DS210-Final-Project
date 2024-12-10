@@ -23,15 +23,20 @@ impl Graph {
         let mut current_node = current.clone();
         let mut rng = rand::thread_rng();
         for _ in 0..steps {
-            let neighbors = self.outedges.get(&current_node).unwrap_or_else(|| &Vec::new());
+            let neighbors = match self.outedges.get(&current_node) {
+                Some(neighbors) => neighbors,
+                None => &vec![],//handels when there's no neighbor
+            };
             if neighbors.is_empty() { //the vertex has no outgoing edges
-                let rand_jump_i = rng.gen_range(0..self.outedges.len());
-                current_node = self.outedges.keys().nth(rand_jump_i).unwrap().clone(); //jump to a random node in the entire graph
+                let keys: Vec<_> = self.outedges.keys().collect();
+                let rand_jump_i = rng.gen_range(0..keys.len());
+                current_node = keys[rand_jump_i].clone(); //jump to a random node in the entire graph
             } else { 
                 let random_number = rng.gen_range(1..=10);
                 if random_number == 1 { // 10% chance for this branch
-                    let rand_jump_i = rng.gen_range(0..self.outedges.len());
-                    current_node = self.outedges.keys().nth(rand_jump_i).unwrap().clone(); //jump to a random node in the entire graph
+                    let keys: Vec<_> = self.outedges.keys().collect();
+                    let rand_jump_i = rng.gen_range(0..keys.len());
+                    current_node = keys[rand_jump_i].clone(); //jump to a random node in the entire graph
                 } else {// 90% chance for this branch
                     let random_edge = rng.gen_range(0..neighbors.len());
                     current_node = neighbors[random_edge].clone();//jump to a random node in the list of neighbors
