@@ -1,6 +1,7 @@
 mod graph;
 mod clustering;
 use graph::Graph;
+use clustering::Cluster;
 use std::error::Error;
 use std::collections::HashMap;
 
