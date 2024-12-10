@@ -1,6 +1,6 @@
 mod graph;
+mod clustering;
 use graph::Graph;
-use rand::Rng;
 use std::error::Error;
 use std::collections::HashMap;
 
@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Read the graph from the CSV file
     let graph = Graph::read_graph_from_csv(file_path)?;
     
-    let computed_page_rank = page_rank(&graph, 80, 80);
+    let computed_page_rank = page_rank(&graph, 10, 50);
     // Print the adjacency list (graph) to check the structure
     let mut ranked_papers: Vec<(String, f64)> = computed_page_rank.iter().map(|(key, value)| (key.clone(), *value)).collect();
     ranked_papers.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
