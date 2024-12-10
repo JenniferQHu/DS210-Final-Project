@@ -1,8 +1,8 @@
-use std::collections::HashMap
+use std::collections::HashMap;
 use rand::Rng;
 use csv::ReaderBuilder;
 
-pub type Node = String
+pub type Node = String;
 pub type AdjacencyLists = HashMap<Node, Vec<Node>>;
 
 #[derive(Debug)]
@@ -23,52 +23,52 @@ impl Graph {
         let mut current_node = current.clone();
         let mut rng = rand::thread_rng();
         for _ in 0..steps {
-            let neighbors = self.outedges.get(&current_node).unwrap_or(&Vec::new());
+            let neighbors = self.outedges.get(&current_node).unwrap_or_else(|| &Vec::new());
             if neighbors.is_empty() { //the vertex has no outgoing edges
-                let rand_i = rng.gen_range(0..self.len());
-                current_v = self.outedges.keys().nth(rand_i).unwrap().clone(); //jump to a random node in the entire graph
+                let rand_jump_i = rng.gen_range(0..self.outedges.len());
+                current_node = self.outedges.keys().nth(rand_jump_i).unwrap().clone(); //jump to a random node in the entire graph
             } else { 
                 let random_number = rng.gen_range(1..=10);
                 if random_number == 1 { // 10% chance for this branch
-                    current_v = rng.gen_range(0..self.len()); //jump to a random node in the entire graph
+                    let rand_jump_i = rng.gen_range(0..self.outedges.len());
+                    current_node = self.outedges.keys().nth(rand_jump_i).unwrap().clone(); //jump to a random node in the entire graph
                 } else {// 90% chance for this branch
                     let random_edge = rng.gen_range(0..neighbors.len());
-                    current_v = neighbors[random_edge].clone();//jump to a random node in the list of neighbors
+                    current_node = neighbors[random_edge].clone();//jump to a random node in the list of neighbors
                 }
             }
         }
-        return current_v;
+        return current_node;
     }
-    
-}
 
-pub fn read_graph_from_csv(filename: &str) -> Result<Graph, Box<dyn std::error:Error>> {
-    let mut graph: Vec<(Node, Node)> = Vec::new();
-    // Open the file (data are separated by \t)
-    let mut rdr = ReaderBuilder::new()
-        .delimiter(b'\t')
-        .has_headers(true)
-        .from_path(file_path)?;
-    
-    // Read through the rows in the CSV
-    for result in rdr.records() {
-        match result {
-            Ok(line) => {
-                if line.len() < 2 {
-                    println!("Skipping invalid line: {:?}", line);
+    pub fn read_graph_from_csv(filename: &str) -> Result<Graph, Box<dyn std::error::Error>> {
+        let mut graph: Vec<(Node, Node)> = Vec::new();
+        // Open the file (data are separated by \t)
+        let mut rdr = ReaderBuilder::new()
+            .delimiter(b'\t')
+            .has_headers(true)
+            .from_path(filename)?;
+        
+        // Read through the rows in the CSV
+        for result in rdr.records() {
+            match result {
+                Ok(line) => {
+                    if line.len() < 2 {
+                        println!("Skipping invalid line: {:?}", line);
+                        continue;
+                    }
+                    let from: &str = &line[0];
+                    let to: &str = &line[1];
+                    // Insert the edge into the adjacency list for the node
+                    graph.push((from.to_string(), to.to_string()));
+                },
+                Err(e) => {
+                    println!("Error reading record: {}", e);
                     continue;
                 }
-                let from: &str = &line[0];
-                let to: &str = &line[1];
-                // Insert the edge into the adjacency list for the node
-                graph.push((from.to_string(), to.to_string()));
-            },
-            Err(e) => {
-                println!("Error reading record: {}", e);
-                continue;
             }
         }
+        let graph_struct = Graph::create_directed_graph(graph);
+        Ok(graph_struct)
     }
-    let graph_struct = Graph::create_directed_graph(graph);
-    Ok(graph_struct)
-}
+} 

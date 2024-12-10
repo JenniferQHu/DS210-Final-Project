@@ -1,20 +1,21 @@
 mod graph;
 use graph::{Graph, read_graph_from_csv};
 use rand::Rng;
-use std::collections::HashMap
+use std::error::Error;
+use std::collections::HashMap;
 
 fn page_rank(graph: &Graph, steps: usize, iterations: usize) -> HashMap<String, f64> {
     let mut terminations = HashMap::<String, usize>::new();
     for _ in 0..iterations {
-        for node in graph.outedges.key() {
+        for node in graph.outedges.keys() {
             let next_node = graph.random_walk(node, steps);
-            terminations.entry(next_node).or_inset(0) += 1;
+            *terminations.entry(next_node).or_insert(0) += 1;
         }
     }
     let walks = iterations * graph.outedges.len() as usize;
     let mut page_rank: HashMap<String, f64> = HashMap::new();
     for (node, count) in terminations.iter() {
-        page_rank.insert(node.clone(), count as f64 / walks as f64);
+        page_rank.insert(node.clone(), *count as f64 / walks as f64);
     }
     page_rank
 }
@@ -25,8 +26,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Read the graph from the CSV file
     let graph = read_graph_from_csv(file_path)?;
     
+    let computed_page_rank = page_rank(&graph, 80, 80);
     // Print the adjacency list (graph) to check the structure
-    let mut ranked_papers: Vec<(String, f64)> = page_rank.iter().map(|(key, value)| (key.clone(), *v)).collect();
+    let mut ranked_papers: Vec<(String, f64)> = computed_page_rank.iter().map(|(key, value)| (key.clone(), *value)).collect();
     ranked_papers.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
     let top_count = 5;
     println!("Top 5 Cited Papers:");
