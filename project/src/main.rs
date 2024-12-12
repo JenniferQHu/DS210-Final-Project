@@ -37,12 +37,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     //     println!("{}: paper {}, rank {}", i+1, paper, rank);
     // }
 
-    let clustering = Clustering::kmeans_clustering(&graph.outedges, 3, 10);// k = 3, 10 iterations
-    for (i, cluster) in clusters.clusters.iter().enumerate() {
+    let clustering = Cluster::kmeans_clustering(&graph.outedges, 10, 10);// k = 10, 10 iterations
+    for (i, cluster) in clustering.iter().enumerate() {
         println!("Cluster {}:", i + 1);
-        println!("Centroid: {}", cluster.centroid);
+        println!("Centroid: {}", cluster.centroids);
         println!("Members: {:?}", cluster.members);
     }
-    
+
     Ok(())
 }
