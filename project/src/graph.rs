@@ -55,11 +55,11 @@ impl Graph {
             .from_path(filename)?;
         
         // Read through the rows in the CSV
-        for result in rdr.records() {
+        for (line_number, result) in rdr.records().enumerate() {
             match result {
                 Ok(line) => {
                     if line.len() < 2 {
-                        println!("Skipping invalid line: {:?}", line);
+                        println!("Skipping invalid line {}: {:?}", line_number + 1, line);
                         continue;
                     }
                     let from: &str = &line[0];
@@ -68,7 +68,7 @@ impl Graph {
                     graph.push((from.to_string(), to.to_string()));
                 },
                 Err(e) => {
-                    println!("Error reading record: {}", e);
+                    println!("Error reading record {}: {}", line_number + 1, e);
                     continue;
                 }
             }
