@@ -37,12 +37,23 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("{}: paper {}, rank {}", i+1, paper, rank);
     }
 
-    let clustering = Cluster::kmeans_clustering(&graph.outedges, 3, 10);// k = 10, 10 iterations
+    let clustering = Cluster::kmeans_clustering(&graph.outedges, 3, 10);// k = 3, 10 iterations
     for (i, cluster) in clustering.iter().enumerate() {
         println!("Cluster {}:", i + 1);
-        println!("Centroid: {}", cluster.centroids);
+        println!("Centroid: {:?}", cluster.centroids);
         println!("Members: {:?}", cluster.members);
     }
 
     Ok(())
 }
+
+#[test]
+fn test_pagerank_sum_to_one() {
+    let graph = graph_from_csv("citations.csv");
+    let page_rank_values = page_rank(&graph, 5, 10);
+
+    let sum: f64 = page_rank_values.iter().sum();
+    let tolerance = 1e-9; // Allowable error margin
+
+    assert!((sum - 1.0).abs() < tolerance, "Sum of PageRank values is not approximately 1.0. Actual sum: {:.6}", sum);
+    }
