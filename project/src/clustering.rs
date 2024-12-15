@@ -45,7 +45,7 @@ impl Cluster {
     }
 
     // Converts adjacency lists into feature vectors for clustering
-    fn convert_to_feature_vectors(adjacency_lists: &HashMap<Node, Vec<Node>>, nodes: &[&Node]) -> Vec<Vec<f64>> {
+    pub fn convert_to_feature_vectors(adjacency_lists: &HashMap<Node, Vec<Node>>, nodes: &[&Node]) -> Vec<Vec<f64>> {
         let mut data: Vec<Vec<f64>> = Vec::new();
         for node in nodes {
             let empty_vec: Vec<Node> = Vec::new();
@@ -60,7 +60,7 @@ impl Cluster {
         }
         data
     }
-    fn find_closest_node(centroid: &Vec<f64>, data: &[Vec<f64>], nodes: &[&Node]) -> String {
+    pub fn find_closest_node(centroid: &Vec<f64>, data: &[Vec<f64>], nodes: &[&Node]) -> String {
         let closest_index = nodes.iter().enumerate()
             .min_by(|(i_a, _), (i_b, _)| {
                 let dist_a = centroid.iter().zip(&data[*i_a])//Pairs each feature of the centroid with the corresponding feature of node a
